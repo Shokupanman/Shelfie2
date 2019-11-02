@@ -1,82 +1,39 @@
 import React, { Component } from "react";
 import Product from "./../Product/Product";
-import App from "./../../App";
 import axios from "axios";
+import "./Dashboard.css";
 
 export default class Dashboard extends Component {
-  constructor() {
-    super();
-
+  constructor(props) {
+    super(props);
     this.state = {
-      imgUrl: "",
-      productName: "",
-      price: 0,
-      newName: "",
-      newImg: "",
-      newPrice: 0
+      inventory: []
     };
+    this.getInventory = this.getInventory.bind(this);
+    this.deleteProduct = this.deleteProduct.bind(this);
   }
-
-  resetState() {
-    this.state = this.defaultState;
-  }
-
-  addImage() {
-    this.setState({
-      imgUrl: ""
-    });
-  }
-
-  addPName() {
-    this.setState({
-      productName: ""
-    });
-  }
-
-  addPrice() {
-    this.setState({
-      price: ""
-    });
+  componentDidMount() {
+    this.getInventory();
   }
   getInventory() {
     axios
       .get("/api/inventory")
-      .then(res => this.setState({ inventory: res.data }));
+      .then(res => this.SVGElementInstanceList({ inventory: res.data }));
   }
-
-  handleChange = event => {
-    this.setState({
-      [event.target.name]: event.target.value
-    });
-  };
+  deleteProduct(id) {
+    axios
+      .delete(`/api/product/${id}`)
+      .then(res => this.getInventory())
+      .catch(err => console.log(`Uh oh, somebody made a ${err}! `));
+  }
   render() {
-    let { imgUrl, productName, price, resetState } = this.state;
-    let { handleChange } = this;
     return (
-      <div>
-        <div className="Dashboard">
-          <div className="addInventory">
-            <input
-              type="text"
-              name="empty"
-              value={this.state.newImg}
-              onChange={handleChange}
-            />
-            <input
-              type="text"
-              value={this.state.newName}
-              onChange={handleChange}
-            />
-            <input
-              type="text"
-              value={this.state.newPrice}
-              onChange={handleChange}
-            />
-            <button onClick={resetState}>Cancel</button>
-            <button>Add to Inventory</button>
-          </div>
-        </div>
-        <Product />
+      <div className="Dashboard">
+        {this.state.inventory.map(el => {
+          return (
+            <Product key={el.id} item={el} deleteProduct={this.deleteProduct} />
+          );
+        })}
       </div>
     );
   }
